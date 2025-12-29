@@ -124,13 +124,9 @@ log_step "ステップ 3/7: Homebrewのセットアップ"
 if ! command -v brew &> /dev/null; then
     log_task "Homebrewインストール準備"
     # Pre-create directory to avoid sudo prompt in installer
-    if [ ! -d "/home/linuxbrew" ]; then
-        run_sudo mkdir -p /home/linuxbrew/.linuxbrew
-        # Own the parent /home/linuxbrew too if we created it
-        run_sudo chown -R "$USER:$USER" /home/linuxbrew
-    elif [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
-         run_sudo mkdir -p /home/linuxbrew/.linuxbrew
-         run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew
+    if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+        run_sudo mkdir -p /home/linuxbrew/.linuxbrew >/dev/null 2>&1
+        run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew >/dev/null 2>&1
     fi
     finish_task
 
