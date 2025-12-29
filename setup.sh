@@ -111,6 +111,14 @@ if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 # 4. Install Homebrew
 log_step "ステップ 3/7: Homebrewのセットアップ"
 if ! command -v brew &> /dev/null; then
+    log_task "Homebrewインストール準備"
+    # Pre-create directory to avoid sudo prompt in installer
+    if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+        run_sudo mkdir -p /home/linuxbrew/.linuxbrew >/dev/null 2>&1
+        run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew >/dev/null 2>&1
+    fi
+    finish_task
+
     log_task "Homebrewをダウンロード＆インストール中"
     /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >/dev/null 2>&1
     
