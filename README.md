@@ -10,15 +10,12 @@
 
 ターミナルでアイコンを正しく表示するために、まずフォントをインストールします。
 
-1. 以下のリンクを開く
-   - <https://github.com/yuru7/HackGen/releases/latest>
+1. 以下のリンクを開くいて、zipファイルをダウンロードしてください
+   - <https://github.com/yuru7/HackGen/releases/download/v2.10.0/HackGen_NF_v2.10.0.zip>
 
-2. 「**HackGen_NF_vX.X.X.zip**」（Xはバージョン番号）をダウンロード
-   > ⚠️ 「NF」が付いているものを選んでね（Nerd Font対応版）
+2. ダウンロードしたZIPファイルを展開（右クリック → すべて展開）
 
-3. ダウンロードしたZIPファイルを展開（右クリック → すべて展開）
-
-4. 展開したフォルダ内の `.ttf` ファイルを全選択 → 右クリック → 「インストール」
+3. 展開したフォルダ内の `.ttf` ファイルを全選択 → 右クリック → 「インストール」
 
 ---
 
@@ -85,31 +82,20 @@ brew install sheldon eza fzf
 
 ---
 
-### ステップ6: dotfilesをダウンロード
-
-```bash
-cd ~
-git clone https://github.com/あなたのユーザー名/dotfiles.git
-```
-
-> ⚠️ 上のコマンドの「あなたのユーザー名/dotfiles」はリポジトリのURLに置き換えてね
-
----
-
-### ステップ7: 設定ファイルを配置
+### ステップ6: 設定ファイルをダウンロード
 
 以下のコマンドを**1行ずつ**実行してください：
 
 ```bash
-ln -sf ~/dotfiles/.zshrc ~/.zshrc
+curl -L -o ~/.zshrc https://raw.githubusercontent.com/sweetfish329/dotfiles/main/.zshrc
 ```
 
 ```bash
-ln -sf ~/dotfiles/.p10k.zsh ~/.p10k.zsh
+curl -L -o ~/.p10k.zsh https://raw.githubusercontent.com/sweetfish329/dotfiles/main/.p10k.zsh
 ```
 
 ```bash
-ln -sf ~/dotfiles/.vimrc ~/.vimrc
+curl -L -o ~/.vimrc https://raw.githubusercontent.com/sweetfish329/dotfiles/main/.vimrc
 ```
 
 ```bash
@@ -117,12 +103,12 @@ mkdir -p ~/.config/sheldon
 ```
 
 ```bash
-ln -sf ~/dotfiles/.plugins/sheldon/plugins.toml ~/.config/sheldon/plugins.toml
+curl -L -o ~/.config/sheldon/plugins.toml https://raw.githubusercontent.com/sweetfish329/dotfiles/main/.plugins/sheldon/plugins.toml
 ```
 
 ---
 
-### ステップ8: zshをデフォルトシェルに設定
+### ステップ7: zshをデフォルトシェルに設定
 
 ```bash
 chsh -s $(which zsh)
@@ -132,7 +118,7 @@ chsh -s $(which zsh)
 
 ---
 
-### ステップ9: プラグインをインストール
+### ステップ8: プラグインをインストール
 
 ```bash
 zsh -c "sheldon lock"
@@ -140,9 +126,9 @@ zsh -c "sheldon lock"
 
 ---
 
-### ステップ10: Windowsターミナルのフォント設定
+### ステップ9: Windowsターミナルのフォント設定
 
-1. Ubuntuのタブを右クリック → 「設定」
+1. Ubuntuのタブの右にある▽をクリック → 「設定」
 2. 左メニューから「Ubuntu」を選択
 3. 「外観」タブをクリック
 4. 「フォントフェイス」を「**HackGen Console NF**」に変更
@@ -150,7 +136,7 @@ zsh -c "sheldon lock"
 
 ---
 
-### ステップ11: Ubuntuを再起動
+### ステップ10: Ubuntuを再起動
 
 1. ターミナルに `exit` と入力してEnterを押す
 2. 再度「Ubuntu」アプリを起動する
