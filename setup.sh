@@ -4,6 +4,10 @@
 # Dotfiles Setup Script for WSL Ubuntu
 # ==========================================
 
+LOGFILE="/tmp/dotfiles_setup.log"
+rm -f "$LOGFILE"
+touch "$LOGFILE"
+
 # Colors & Styles
 ESC=$(printf '\033')
 RESET="${ESC}[0m"
@@ -60,6 +64,9 @@ finish_task() {
 
 fail_task() {
     echo -e "${RED}FAILED!${RESET}"
+    echo -e "\n${RED}エラー詳細 (直近20行):${RESET}"
+    tail -n 20 "$LOGFILE"
+    echo -e "\n${RED}ログファイル: $LOGFILE${RESET}"
     exit 1
 }
 
@@ -67,10 +74,14 @@ fail_task() {
 PASSWORD=$1
 run_sudo() {
     if [ -n "$PASSWORD" ]; then
-        echo "$PASSWORD" | sudo -S "$@" 2>/dev/null
+        echo "$PASSWORD" | sudo -S "$@" >>"$LOGFILE" 2>&1
     else
-        sudo "$@"
+        sudo "$@" >>"$LOGFILE" 2>&1
     fi
+}
+
+log_cmd() {
+    "$@" >>"$LOGFILE" 2>&1
 }
 
 # --- Main Script ---
@@ -80,12 +91,12 @@ log_header "Dotfiles Setup for WSL"
 
 log_info "セットアップを開始します..."
 log_info "管理者権限(sudo)が必要です。"
+log_info "詳細ログ: $LOGFILE"
 
 # 1. Validation Sudo
 if [ -n "$PASSWORD" ]; then
     echo "$PASSWORD" | sudo -S ls /root >/dev/null 2>&1
 else
-    # Sudo warm-up
     sudo ls /root >/dev/null 2>&1
 fi
 
@@ -98,14 +109,14 @@ log_success "管理者権限を確認しました。"
 # 2. System Update
 log_step "ステップ 1/7: システム更新"
 log_task "apt updateを実行中"
-run_sudo apt update -y >/dev/null 2>&1
+run_sudo apt update -y
 if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
 # 3. Install Essentials
 log_step "ステップ 2/7: 必須ツールのインストール"
 PACKAGES="zsh vim git curl unzip build-essential"
 log_task "インストール中: $PACKAGES"
-run_sudo apt install -y $PACKAGES >/dev/null 2>&1
+run_sudo apt install -y $PACKAGES
 if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
 # 4. Install Homebrew
@@ -113,14 +124,18 @@ log_step "ステップ 3/7: Homebrewのセットアップ"
 if ! command -v brew &> /dev/null; then
     log_task "Homebrewインストール準備"
     # Pre-create directory to avoid sudo prompt in installer
-    if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
-        run_sudo mkdir -p /home/linuxbrew/.linuxbrew >/dev/null 2>&1
-        run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew >/dev/null 2>&1
+    if [ ! -d "/home/linuxbrew" ]; then
+        run_sudo mkdir -p /home/linuxbrew/.linuxbrew
+        # Own the parent /home/linuxbrew too if we created it
+        run_sudo chown -R "$USER:$USER" /home/linuxbrew
+    elif [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+         run_sudo mkdir -p /home/linuxbrew/.linuxbrew
+         run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew
     fi
     finish_task
 
     log_task "Homebrewをダウンロード＆インストール中"
-    /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >/dev/null 2>&1
+    log_cmd /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     if [ $? -eq 0 ]; then
         finish_task
@@ -142,7 +157,7 @@ fi
 log_step "ステップ 4/7: 便利ツールのインストール"
 TOOLS="sheldon eza fzf"
 log_task "Brewインストール中: $TOOLS"
-brew install $TOOLS >/dev/null 2>&1
+log_cmd brew install $TOOLS
 if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
 # 6. Download Dotfiles
@@ -154,7 +169,7 @@ download_file() {
     local filename=$(basename "$dest")
     
     log_task "$filename をダウンロード"
-    curl -L -o "$dest" "$url" >/dev/null 2>&1
+    log_cmd curl -L -o "$dest" "$url"
     
     if [ $? -eq 0 ]; then
         finish_task
@@ -177,7 +192,7 @@ log_step "ステップ 6/7: シェル設定"
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
     log_task "デフォルトシェルをzshに変更"
-    run_sudo chsh -s "$(which zsh)" "$USER" >/dev/null 2>&1
+    run_sudo chsh -s "$(which zsh)" "$USER"
     if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 else
     log_info "デフォルトシェルは既にzshです"
@@ -186,7 +201,7 @@ fi
 # 8. Initialize Sheldon
 log_step "ステップ 7/7: プラグインの初期化"
 log_task "sheldon lock を実行中"
-zsh -c "sheldon lock" >/dev/null 2>&1
+log_cmd zsh -c "sheldon lock"
 if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
 # Completion
