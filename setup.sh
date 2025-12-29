@@ -106,6 +106,13 @@ if [ $? -ne 0 ]; then
 fi
 log_success "管理者権限を確認しました。"
 
+# 1.5 Backup .bashrc
+if [ -f "$HOME/.bashrc" ]; then
+    log_task ".bashrc を .bashrc.bk にバックアップ"
+    cp -f "$HOME/.bashrc" "$HOME/.bashrc.bk"
+    finish_task
+fi
+
 # 2. System Update
 log_step "ステップ 1/7: システム更新"
 log_task "apt updateを実行中"
