@@ -108,8 +108,9 @@ log_success "管理者権限を確認しました。"
 
 # 1.5 Backup .bashrc
 if [ -f "$HOME/.bashrc" ]; then
-    log_task ".bashrc を .bashrc.bk にバックアップ"
-    cp -f "$HOME/.bashrc" "$HOME/.bashrc.bk"
+    BACKUP_NAME=".bashrc.bk.$(date +%Y%m%d)"
+    log_task ".bashrc を $BACKUP_NAME にバックアップ"
+    cp -f "$HOME/.bashrc" "$HOME/$BACKUP_NAME"
     finish_task
 fi
 
