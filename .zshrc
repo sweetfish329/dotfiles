@@ -4,6 +4,10 @@
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
 export SAVEHIST=100000
 
 # Initialize sheldon (zsh-completions needs to be added to fpath before compinit)
@@ -14,9 +18,6 @@ compinit
 
 # fzf setup (must be after compinit and sheldon)
 source <(fzf --zsh)
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 abbr -S -q ei="eza --icons --git"
 abbr -S -q ea="eza -la --icons --git"
