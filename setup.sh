@@ -191,6 +191,21 @@ download_file "$BASE_URL/.zshrc" "$HOME/.zshrc"
 download_file "$BASE_URL/.p10k.zsh" "$HOME/.p10k.zsh"
 download_file "$BASE_URL/.vimrc" "$HOME/.vimrc"
 
+# Inject Homebrew path to .zshrc (Must be before sheldon initialization)
+if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
+    log_task ".zshrc に Homebrew の設定を追記"
+    BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    
+    # Check if already exists to be safe
+    if ! grep -qF "$BREW_ENV" "$HOME/.zshrc"; then
+        # Create temp file with brew env at top
+        echo "$BREW_ENV" | cat - "$HOME/.zshrc" > "$HOME/.zshrc.tmp" && mv "$HOME/.zshrc.tmp" "$HOME/.zshrc"
+        finish_task
+    else
+        log_info ".zshrc は設定済みです"
+    fi
+fi
+
 mkdir -p "$HOME/.config/sheldon"
 download_file "$BASE_URL/.plugins/sheldon/plugins.toml" "$HOME/.config/sheldon/plugins.toml"
 
