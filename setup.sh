@@ -111,7 +111,7 @@ if [ -f "$HOME/.bashrc" ]; then
     BACKUP_NAME=".bashrc.bk.$(date +%Y%m%d)"
     log_task ".bashrc を $BACKUP_NAME にバックアップ"
     cp -f "$HOME/.bashrc" "$HOME/$BACKUP_NAME"
-    finish_task
+    if [ -f "$HOME/$BACKUP_NAME" ]; then finish_task; else fail_task; fi
 fi
 
 # 2. System Update
@@ -131,7 +131,7 @@ if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 log_step "ステップ 3/7: Homebrewのセットアップ"
 if ! command -v brew &> /dev/null; then
     log_task "Homebrewインストール準備"
-    # Pre-create directory to avoid sudo prompt in installer
+    # Pre-check & Action: Create directory
     if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
         run_sudo mkdir -p /home/linuxbrew/.linuxbrew >/dev/null 2>&1
         run_sudo chown -R "$USER:$USER" /home/linuxbrew/.linuxbrew >/dev/null 2>&1
@@ -139,29 +139,35 @@ if ! command -v brew &> /dev/null; then
     finish_task
 
     log_task "Homebrewをダウンロード＆インストール中"
-    # Show output for debugging
+    # Action
     /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [ $? -ne 0 ]; then fail_task; fi
+    finish_task
     
-    if [ $? -eq 0 ]; then
-        finish_task
+    # Post-check: Configure PATH and Verify
+    log_task "Homebrewの動作確認"
+    if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         
-        # Add to PATH for this session
-        if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        if command -v brew &> /dev/null; then
+            finish_task
             
-            # Check .bashrc to avoid duplicates
+            # Action: Persist to .bashrc
             BASHRC_PATH="$HOME/.bashrc"
             BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
             
             if ! grep -qF "$BREW_ENV" "$BASHRC_PATH"; then
                 echo "$BREW_ENV" >> "$BASHRC_PATH"
-                log_success ".bashrc に Homebrew のパスを追加しました"
+                log_success ".bashrc にパスを追加しました"
             else
                 log_info ".bashrc は設定済みです"
             fi
+        else
+            log_error "brewコマンドが見つかりません"
+            fail_task
         fi
-        log_success "Homebrewインストール完了"
     else
+        log_error "Homebrewディレクトリが見つかりません"
         fail_task
     fi
 else
@@ -204,11 +210,18 @@ if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
     log_task ".zshrc に Homebrew の設定を追記"
     BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
     
-    # Check if already exists to be safe
+    # Pre-check: Check validity
     if ! grep -qF "$BREW_ENV" "$HOME/.zshrc"; then
-        # Create temp file with brew env at top
+        # Change
         echo "$BREW_ENV" | cat - "$HOME/.zshrc" > "$HOME/.zshrc.tmp" && mv "$HOME/.zshrc.tmp" "$HOME/.zshrc"
-        finish_task
+        
+        # Post-check: Verify brew command works inside zsh
+        if zsh -c "source $HOME/.zshrc && command -v brew" >/dev/null 2>&1; then
+            finish_task
+        else
+            log_error "Zsh内でのHomebrew認識に失敗しました"
+            fail_task
+        fi
     else
         log_info ".zshrc は設定済みです"
     fi
