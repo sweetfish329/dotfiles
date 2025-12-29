@@ -1,0 +1,85 @@
+# `sheldon` configuration file
+# ----------------------------
+#
+# You can modify this file directly or you can use one of the following
+# `sheldon` commands which are provided to assist in editing the config file:
+#
+# - `sheldon add` to add a new plugin to the config file
+# - `sheldon edit` to open up the config file in the default editor
+# - `sheldon remove` to remove a plugin from the config file
+#
+# See the documentation for more https://github.com/rossmacarthur/sheldon#readme
+
+shell = "zsh"
+
+[plugins]
+
+# For example:
+#
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+apply = ['source']
+
+# Only install fzf binary, source it manually in .zshrc after compinit
+[plugins.fzf]
+github = 'junegunn/fzf'
+apply = ['fzf-install']
+
+[plugins.base16]
+github = "chriskempson/base16-shell"
+apply = ["defer"]
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+apply = ["defer"]
+
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+apply = ["defer"]
+
+[plugins.enhancd]
+github = "babarot/enhancd"
+apply = ["defer"]
+
+[plugins.zsh-you-should-use]
+github = "MichaelAquilina/zsh-you-should-use"
+
+[plugins.zsh-fzf-history-search]
+github = "joshskidmore/zsh-fzf-history-search"
+
+[plugins.fzf-tab]
+github = "Aloxaf/fzf-tab"
+
+[plugins.fzf-tab-config]
+inline = """
+my-fzf-tab() {
+    functions[compadd]=$functions[-ftb-compadd]
+    zle fzf-tab-complete
+}
+zle -N my-fzf-tab
+bindkey "^I" my-fzf-tab
+"""
+
+[plugins.zsh-git-fzf]
+github = "alexiszamanidis/zsh-git-fzf"
+apply = ["defer"]
+
+[plugins.prezto-spectrum]
+remote = "https://raw.githubusercontent.com/sorin-ionescu/prezto/refs/heads/master/modules/spectrum/init.zsh"
+
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"
+
+[plugins.powerlevel10k]
+github = "romkatv/powerlevel10k"
+
+[plugins.history-search-multi-word]
+github = "zdharma-continuum/history-search-multi-word"
+
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+
+[templates]
+defer = "{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}"
+fzf-install = "{{ dir }}/install --bin > /dev/null \n path=($path {{ dir }}/bin(N-/))\n"
+fzf-source = "source <(fzf --zsh)"
