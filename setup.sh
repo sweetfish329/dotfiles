@@ -216,7 +216,7 @@ if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
         echo "$BREW_ENV" | cat - "$HOME/.zshrc" > "$HOME/.zshrc.tmp" && mv "$HOME/.zshrc.tmp" "$HOME/.zshrc"
         
         # Post-check: Verify brew command works inside zsh
-        if zsh -c "source $HOME/.zshrc && command -v brew" >/dev/null 2>&1; then
+        if zsh -c "source $HOME/.zshrc && command -v brew"; then
             finish_task
         else
             log_error "Zsh内でのHomebrew認識に失敗しました"
