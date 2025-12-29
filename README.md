@@ -41,7 +41,6 @@ sudo apt update && sudo apt install -y curl git
 **2. セットアップを実行する**
 
 ```bash
-# セットアップスクリプトをダウンロードして実行
 curl -L https://raw.githubusercontent.com/sweetfish329/dotfiles/main/setup.sh | bash
 ```
 
