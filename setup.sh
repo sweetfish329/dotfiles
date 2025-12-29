@@ -131,7 +131,8 @@ if ! command -v brew &> /dev/null; then
     finish_task
 
     log_task "Homebrewをダウンロード＆インストール中"
-    log_cmd /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Show output for debugging
+    /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     if [ $? -eq 0 ]; then
         finish_task
