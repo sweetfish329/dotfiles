@@ -1,19 +1,66 @@
 #!/bin/bash
 
 # ==========================================
-# Dotfiles Setup Script for WSL Ubuntu (Japanese & Rich UI)
+# Dotfiles Setup Script for WSL Ubuntu
 # ==========================================
 
-# --- Gum Installation & Helper Functions ---
+# Colors & Styles
+ESC=$(printf '\033')
+RESET="${ESC}[0m"
+BOLD="${ESC}[1m"
+RED="${ESC}[31m"
+GREEN="${ESC}[32m"
+BLUE="${ESC}[34m"
+CYAN="${ESC}[36m"
+MAGENTA="${ESC}[35m"
+YELLOW="${ESC}[33m"
 
-install_gum() {
-    if ! command -v gum &> /dev/null; then
-        echo "📦 Installing gum for reliable UI..."
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-        echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
-        sudo apt update && sudo apt install -y gum
-    fi
+# Icons
+ICON_ROCKET="🚀"
+ICON_CHECK="✅"
+ICON_ERROR="❌"
+ICON_INFO="ℹ️ "
+ICON_GEAR="⚙️ "
+ICON_PKG="📦"
+
+# --- UI Functions ---
+
+log_header() {
+    local title="$1"
+    local len=${#title}
+    local border=$(printf '%.0s=' $(seq 1 $((len + 4))))
+    echo -e "\n${MAGENTA}${BOLD}${border}${RESET}"
+    echo -e "${MAGENTA}${BOLD}| ${title} |${RESET}"
+    echo -e "${MAGENTA}${BOLD}${border}${RESET}\n"
+}
+
+log_step() {
+    echo -e "${BLUE}${BOLD}${ICON_ROCKET} $1${RESET}"
+}
+
+log_success() {
+    echo -e "${GREEN}${BOLD}${ICON_CHECK} $1${RESET}"
+}
+
+log_error() {
+    echo -e "${RED}${BOLD}${ICON_ERROR} $1${RESET}"
+}
+
+log_info() {
+    echo -e "${CYAN}${ICON_INFO} $1${RESET}"
+}
+
+log_task() {
+    echo -n -e "${YELLOW}${ICON_GEAR} $1... ${RESET}"
+}
+
+finish_task() {
+    echo -e "${GREEN}OK!${RESET}"
+}
+
+fail_task() {
+    echo -e "${RED}FAILED!${RESET}"
+    exit 1
 }
 
 # Wrapper for sudo commands
@@ -26,45 +73,6 @@ run_sudo() {
     fi
 }
 
-# --- Initialization ---
-
-# Install gum first to ensure UI works
-# We assume sudo is available. If not, this might fail, but standard WSL Ubuntu users have sudo.
-if [ -n "$PASSWORD" ]; then
-    echo "$PASSWORD" | sudo -S ls /root >/dev/null 2>&1
-else
-    # Simple check to warm up sudo or prompt if needed before gum is ready
-    sudo ls /root >/dev/null 2>&1
-fi
-
-install_gum
-
-# --- UI Functions using Gum ---
-
-log_header() {
-    gum style --foreground 212 --border-foreground 212 --border double --align center --width 50 --margin "1 2" --padding "2 4" "$1"
-}
-
-log_step() {
-    gum style --foreground 99 "🚀 $1"
-}
-
-log_success() {
-    gum style --foreground 82 "✅ $1"
-}
-
-log_error() {
-    gum style --foreground 196 "❌ $1"
-}
-
-log_info() {
-    gum style --foreground 39 "ℹ️  $1"
-}
-
-confirm() {
-    gum confirm "$1" || exit 1
-}
-
 # --- Main Script ---
 
 clear
@@ -73,55 +81,77 @@ log_header "Dotfiles Setup for WSL"
 log_info "セットアップを開始します..."
 log_info "管理者権限(sudo)が必要です。"
 
-# 1. System Update
-log_step "システムを更新しています..."
-gum spin --spinner dot --title "apt updateを実行中..." -- run_sudo apt update -y
-log_success "システム更新完了！"
+# 1. Validation Sudo
+if [ -n "$PASSWORD" ]; then
+    echo "$PASSWORD" | sudo -S ls /root >/dev/null 2>&1
+else
+    # Sudo warm-up
+    sudo ls /root >/dev/null 2>&1
+fi
 
-# 2. Install Essentials
-log_step "必須ツールをインストール中..."
+if [ $? -ne 0 ]; then
+    log_error "管理者権限の取得に失敗しました。パスワードを確認してください。"
+    exit 1
+fi
+log_success "管理者権限を確認しました。"
+
+# 2. System Update
+log_step "ステップ 1/7: システム更新"
+log_task "apt updateを実行中"
+run_sudo apt update -y >/dev/null 2>&1
+if [ $? -eq 0 ]; then finish_task; else fail_task; fi
+
+# 3. Install Essentials
+log_step "ステップ 2/7: 必須ツールのインストール"
 PACKAGES="zsh vim git curl unzip build-essential"
-gum spin --spinner line --title "インストール中: $PACKAGES" -- run_sudo apt install -y $PACKAGES
-log_success "必須ツールインストール完了！"
+log_task "インストール中: $PACKAGES"
+run_sudo apt install -y $PACKAGES >/dev/null 2>&1
+if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
-# 3. Install Homebrew
-log_step "Homebrewを確認中..."
+# 4. Install Homebrew
+log_step "ステップ 3/7: Homebrewのセットアップ"
 if ! command -v brew &> /dev/null; then
-    log_info "Homebrewをインストールします (少し時間がかかります)"
-    # Install Homebrew (Non-interactive)
-    gum spin --spinner minidot --title "Homebrewをダウンロード＆インストール中..." -- \
-        /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    # Add to PATH for this session
-    if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+    log_task "Homebrewをダウンロード＆インストール中"
+    /bin/bash -c "NONINTERACTIVE=1 $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >/dev/null 2>&1
+    
+    if [ $? -eq 0 ]; then
+        finish_task
+        
+        # Add to PATH for this session
+        if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+        fi
+        log_success "Homebrewインストール完了"
+    else
+        fail_task
     fi
-    log_success "Homebrewインストール完了！"
 else
     log_success "Homebrewは既にインストールされています"
 fi
 
-# 4. Install Tools via Homebrew
-log_step "便利ツールをインストール中..."
+# 5. Install Tools via Homebrew
+log_step "ステップ 4/7: 便利ツールのインストール"
 TOOLS="sheldon eza fzf"
-gum spin --spinner points --title "Brewインストール中: $TOOLS" -- brew install $TOOLS
-log_success "便利ツールインストール完了！"
+log_task "Brewインストール中: $TOOLS"
+brew install $TOOLS >/dev/null 2>&1
+if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
-# 5. Download Dotfiles
-log_step "設定ファイルをダウンロード中..."
+# 6. Download Dotfiles
+log_step "ステップ 5/7: 設定ファイルのダウンロード"
 
 download_file() {
     local url=$1
     local dest=$2
     local filename=$(basename "$dest")
     
-    gum spin --spinner globe --title "$filename をダウンロード中..." -- curl -L -o "$dest" "$url"
+    log_task "$filename をダウンロード"
+    curl -L -o "$dest" "$url" >/dev/null 2>&1
     
     if [ $? -eq 0 ]; then
-        log_success "$filename ダウンロードOK"
+        finish_task
     else
-        log_error "$filename のダウンロードに失敗しました"
+        fail_task
     fi
 }
 
@@ -134,31 +164,28 @@ download_file "$BASE_URL/.vimrc" "$HOME/.vimrc"
 mkdir -p "$HOME/.config/sheldon"
 download_file "$BASE_URL/.plugins/sheldon/plugins.toml" "$HOME/.config/sheldon/plugins.toml"
 
-# 6. Set Default Shell
-log_step "デフォルトシェルを設定中..."
+# 7. Set Default Shell
+log_step "ステップ 6/7: シェル設定"
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
-    run_sudo chsh -s "$(which zsh)" "$USER"
-    log_success "デフォルトシェルをzshに変更しました"
+    log_task "デフォルトシェルをzshに変更"
+    run_sudo chsh -s "$(which zsh)" "$USER" >/dev/null 2>&1
+    if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 else
     log_info "デフォルトシェルは既にzshです"
 fi
 
-# 7. Initialize Sheldon
-log_step "プラグインを初期化中..."
-gum spin --spinner moon --title "sheldon lock を実行中..." -- zsh -c "sheldon lock"
-log_success "プラグイン準備完了！"
+# 8. Initialize Sheldon
+log_step "ステップ 7/7: プラグインの初期化"
+log_task "sheldon lock を実行中"
+zsh -c "sheldon lock" >/dev/null 2>&1
+if [ $? -eq 0 ]; then finish_task; else fail_task; fi
 
 # Completion
-clear
-log_header "Setup Complete! 🎉"
-
-gum style \
-	--foreground 212 --border-foreground 212 --border rounded --align center --width 50 --margin "1 2" --padding "1 2" \
-	"セットアップが完了しました！" \
-	"" \
-	"Ubuntuターミナルを再起動してください。" \
-	"設定は自動的に適用されます。" \
-	"" \
-	"HackGen NFフォントの設定もお忘れなく！"
-
+echo -e "\n${MAGENTA}${BOLD}========================================${RESET}"
+echo -e "${GREEN}${BOLD}✨ セットアップが完了しました！ 🎉${RESET}"
+echo -e "${MAGENTA}${BOLD}========================================${RESET}"
+echo -e "\n${CYAN}次のステップ:${RESET}"
+echo -e "1. Ubuntuターミナルを一度閉じて、再起動してください。"
+echo -e "2. 設定は自動的に適用されます。"
+echo -e "\n${YELLOW}※ HackGen NFフォントの設定もお忘れなく！${RESET}\n"
