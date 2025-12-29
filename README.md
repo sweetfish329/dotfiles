@@ -50,7 +50,6 @@ curl -L https://raw.githubusercontent.com/sweetfish329/dotfiles/main/setup.sh | 
 > - もしパスワード入力がうまくいかない場合は、以下のように自分のパスワード（例: `password123`）を引数に付けて実行してください：
 >
 >   ```bash
->   # パスワードを引数で渡す場合（履歴に残るので注意！）
 >   curl -L https://raw.githubusercontent.com/sweetfish329/dotfiles/main/setup.sh | bash -s password123
 >   ```
 
