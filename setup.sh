@@ -140,7 +140,17 @@ if ! command -v brew &> /dev/null; then
         # Add to PATH for this session
         if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+            
+            # Check .bashrc to avoid duplicates
+            local BASHRC_PATH="$HOME/.bashrc"
+            local BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+            
+            if ! grep -qF "$BREW_ENV" "$BASHRC_PATH"; then
+                echo "$BREW_ENV" >> "$BASHRC_PATH"
+                log_success ".bashrc に Homebrew のパスを追加しました"
+            else
+                log_info ".bashrc は設定済みです"
+            fi
         fi
         log_success "Homebrewインストール完了"
     else
