@@ -19,14 +19,16 @@ compinit
 # fzf setup (must be after compinit and sheldon)
 source <(fzf --zsh)
 
-abbr -S -q ei="eza --icons --git"
-abbr -S -q ea="eza -la --icons --git"
-abbr -S -q ee="eza -aahl --icons --git"
-abbr -S -q et="eza -T -L 3 -a -I 'node_modules|.git|.cache' --icons"
-abbr -S -q ls="eza --icons --git"
-abbr -S -q la="eza -la --icons --git"
-abbr -S -q ll="eza -aahl --icons --git"
-abbr -S -q vi="vim"
-abbr -S -q tree="eza -T -L 3 -a -I 'node_modules|.git|.cache' --icons"
+if command -v abbr &> /dev/null; then
+  abbr -S -q ei="eza --icons --git"
+  abbr -S -q ea="eza -la --icons --git"
+  abbr -S -q ee="eza -aahl --icons --git"
+  abbr -S -q et="eza -T -L 3 -a -I 'node_modules|.git|.cache' --icons"
+  abbr -S -q ls="eza --icons --git"
+  abbr -S -q la="eza -la --icons --git"
+  abbr -S -q ll="eza -aahl --icons --git"
+  abbr -S -q vi="vim"
+  abbr -S -q tree="eza -T -L 3 -a -I 'node_modules|.git|.cache' --icons"
 
-abbr -S -q cat="cat -n"
+  abbr -S -q cat="cat -n"
+fi

@@ -230,8 +230,14 @@ fi
 mkdir -p "$HOME/.config/sheldon"
 download_file "$BASE_URL/.plugins/sheldon/plugins.toml" "$HOME/.config/sheldon/plugins.toml"
 
+# Initialize Sheldon (Must satisfy dependencies before sourcing .zshrc)
+log_step "ステップ 6/7: プラグインの初期化"
+log_task "sheldon lock を実行中"
+log_cmd zsh -c "sheldon lock"
+if [ $? -eq 0 ]; then finish_task; else fail_task; fi
+
 # 7. Set Default Shell
-log_step "ステップ 6/7: シェル設定"
+log_step "ステップ 7/7: シェル設定"
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
     log_task "デフォルトシェルをzshに変更"
@@ -241,11 +247,7 @@ else
     log_info "デフォルトシェルは既にzshです"
 fi
 
-# 8. Initialize Sheldon
-log_step "ステップ 7/7: プラグインの初期化"
-log_task "sheldon lock を実行中"
-log_cmd zsh -c "sheldon lock"
-if [ $? -eq 0 ]; then finish_task; else fail_task; fi
+
 
 # Completion
 echo -e "\n${MAGENTA}${BOLD}========================================${RESET}"
