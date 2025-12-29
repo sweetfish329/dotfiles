@@ -150,8 +150,8 @@ if ! command -v brew &> /dev/null; then
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             
             # Check .bashrc to avoid duplicates
-            local BASHRC_PATH="$HOME/.bashrc"
-            local BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+            BASHRC_PATH="$HOME/.bashrc"
+            BREW_ENV='eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
             
             if ! grep -qF "$BREW_ENV" "$BASHRC_PATH"; then
                 echo "$BREW_ENV" >> "$BASHRC_PATH"
